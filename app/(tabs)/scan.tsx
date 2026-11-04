@@ -1,7 +1,7 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 import AppButton from '@/components/AppButton';
 import { COLORS } from '@/constants/colors';
@@ -17,15 +17,13 @@ export default function ScanScreen() {
   const [success, setSuccess] = useState(false);
 
   if (!permission) {
-    return <View style={styles.container} />;
+    return <View style={styles.container}><ActivityIndicator color={COLORS.primary} /></View>;
   }
 
   if (!permission.granted) {
     return (
       <SafeAreaView style={styles.permissionContainer}>
-        <View style={styles.permissionIcon}>
-          <Ionicons name="camera-outline" size={38} color={COLORS.primary} />
-        </View>
+        <View style={styles.permissionIcon}><Ionicons name="camera-outline" size={39} color={COLORS.primary} /></View>
         <Text style={styles.title}>Camera access needed</Text>
         <Text style={styles.subtitle}>Allow your camera to scan event QR codes.</Text>
         <AppButton theme="primary" title="Grant Permission" icon="camera" onPress={requestPermission} />
@@ -68,18 +66,16 @@ export default function ScanScreen() {
       />
 
       <View style={styles.scanFrame}>
-        <View style={styles.corner} />
-        <View style={styles.corner} />
-        <View style={styles.corner} />
-        <View style={styles.corner} />
+        <View style={[styles.corner, styles.cornerTopLeft]} />
+        <View style={[styles.corner, styles.cornerTopRight]} />
+        <View style={[styles.corner, styles.cornerBottomLeft]} />
+        <View style={[styles.corner, styles.cornerBottomRight]} />
       </View>
 
       <View style={styles.overlay}>
-        <Text style={styles.overlayText}>{scanned ? 'QR code detected' : 'Point the camera at an event QR code'}</Text>
-        {scanned && message ? (
-          <Text style={[styles.scanResult, success ? styles.success : styles.error]}>{message}</Text>
-        ) : null}
-        {scanned && lastData ? <Text style={styles.scanData}>{lastData}</Text> : null}
+        <View style={styles.overlayHeader}><Ionicons name={scanned ? 'checkmark-circle' : 'scan-outline'} size={20} color={scanned ? COLORS.success : COLORS.primary} /><Text style={styles.overlayText}>{scanned ? 'QR code detected' : 'Point the camera at an event QR code'}</Text></View>
+        {scanned && message ? <Text style={[styles.scanResult, success ? styles.success : styles.error]}>{message}</Text> : null}
+        {scanned && lastData ? <Text style={styles.scanData}>Event code: {lastData}</Text> : null}
         {scanned ? <AppButton theme="primary" title="Scan Again" icon="refresh" onPress={handleScanAgain} /> : null}
       </View>
     </SafeAreaView>
@@ -93,10 +89,15 @@ const styles = StyleSheet.create({
   permissionIcon: { alignItems: 'center', backgroundColor: COLORS.primarySoft, borderRadius: 24, height: 76, justifyContent: 'center', marginBottom: 24, width: 76 },
   title: { color: COLORS.textPrimary, fontSize: 24, fontWeight: '800', marginBottom: 8, textAlign: 'center' },
   subtitle: { color: COLORS.textSecondary, fontSize: 15, lineHeight: 21, marginBottom: 24, textAlign: 'center' },
-  scanFrame: { borderColor: COLORS.textOnPrimary, borderRadius: 12, borderWidth: 2, height: 260, left: '50%', opacity: 0.8, position: 'absolute', top: '50%', transform: [{ translateX: -130 }, { translateY: -130 }], width: 260 },
-  corner: { borderColor: COLORS.textOnPrimary, borderStyle: 'solid', borderTopColor: COLORS.textOnPrimary, borderTopWidth: 4, height: 26, position: 'absolute', width: 26 },
-  overlay: { alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 18, bottom: 28, left: 24, padding: 16, position: 'absolute', right: 24, shadowColor: COLORS.shadow, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 16 },
-  overlayText: { color: COLORS.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 6, textAlign: 'center' },
+  scanFrame: { borderColor: 'rgba(255,255,255,0.82)', borderRadius: 14, borderWidth: 2, height: 260, left: '50%', position: 'absolute', top: '50%', transform: [{ translateX: -130 }, { translateY: -130 }], width: 260 },
+  corner: { borderColor: 'rgba(255,255,255,0.95)', borderStyle: 'solid', borderTopColor: 'rgba(255,255,255,0.95)', borderTopWidth: 4, height: 28, position: 'absolute', width: 28 },
+  cornerTopLeft: { borderLeftColor: 'rgba(255,255,255,0.95)', borderLeftWidth: 4, left: 0, top: 0 },
+  cornerTopRight: { borderRightColor: 'rgba(255,255,255,0.95)', borderRightWidth: 4, right: 0, top: 0 },
+  cornerBottomLeft: { borderBottomColor: 'rgba(255,255,255,0.95)', borderBottomWidth: 4, bottom: 0, left: 0 },
+  cornerBottomRight: { borderBottomColor: 'rgba(255,255,255,0.95)', borderBottomWidth: 4, borderRightColor: 'rgba(255,255,255,0.95)', borderRightWidth: 4, bottom: 0, right: 0 },
+  overlay: { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 18, bottom: 28, left: 24, padding: 16, position: 'absolute', right: 24, shadowColor: COLORS.shadow, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 16 },
+  overlayHeader: { alignItems: 'center', flexDirection: 'row', gap: 8, justifyContent: 'center', marginBottom: 6 },
+  overlayText: { color: COLORS.textPrimary, fontSize: 15, fontWeight: '700', textAlign: 'center' },
   scanResult: { fontSize: 13, fontWeight: '700', marginBottom: 6, textAlign: 'center' },
   success: { color: COLORS.success },
   error: { color: COLORS.danger },

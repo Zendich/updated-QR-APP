@@ -46,6 +46,34 @@ Scan QR code with Expo Go. Or press `W` for web.
 
 ---
 
+## ADMIN SETUP — Teacher Approval
+
+1. Open `supabase/schema.sql` in Supabase SQL Editor and run the full updated schema. Existing teacher accounts are marked approved; new teacher signups start pending.
+2. In Supabase, open **Authentication → Users** and copy the user ID for the account that will be the first admin.
+3. Run this query in SQL Editor, replacing the placeholder with that user's ID:
+
+```sql
+update public.profiles
+set role = 'admin', teacher_status = 'not_applicable'
+where id = 'PASTE-USER-ID-HERE'
+returning id, email, role;
+```
+
+4. Sign out and back in. The **Admin** tab will show pending requests and teacher accounts. Approving a request enables teacher event tools; rejecting it leaves those tools unavailable.
+5. Install the Supabase CLI, then deploy the protected account-removal function:
+
+```powershell
+supabase login
+supabase link --project-ref YOUR-PROJECT-REF
+supabase functions deploy delete-teacher-account
+```
+
+The function permanently deletes the selected teacher's Auth account. Their profile and attendance records are deleted; events they created remain without an owner. Never put the Supabase service-role key in the app or its `EXPO_PUBLIC_` environment variables.
+
+Approved teachers can delete their own events or clear their event history from **History**. Admins can manage all events there. Deleting events also permanently deletes the attendance records linked to those events.
+
+---
+
 ## TROUBLESHOOTING
 
 | Problem | Solution |

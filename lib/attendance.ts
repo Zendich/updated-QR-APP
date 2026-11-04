@@ -24,6 +24,7 @@ export type TeacherEventAttendance = {
   attendeeCount: number;
   attendees: {
     studentId: string;
+    displayName: string;
     scannedAt: string;
   }[];
 };
@@ -43,9 +44,10 @@ type EventRow = {
   end_time: string | null;
 };
 
-type AttendanceRow = {
+type EventAttendeeRow = {
   event_id: string;
   student_id: string;
+  full_name: string | null;
   scanned_at: string;
 };
 
@@ -182,34 +184,41 @@ export async function getTeacherEventAttendance(
     .order('created_at', { ascending: false });
 
   if (eventError || !events) {
-    return [];
+    throw new Error(eventError?.message ?? 'Could not load teacher events.');
   }
 
-  const typedEvents = events as EventRow[];
+  return buildEventAttendance(events as EventRow[]);
+}
+
+export async function getAllEventAttendance(): Promise<TeacherEventAttendance[]> {
+  const { data: events, error } = await supabase
+    .from('events')
+    .select('id, event_code, title, start_time, end_time')
+    .order('created_at', { ascending: false });
+
+  if (error || !events) {
+    throw new Error(error?.message ?? 'Could not load events.');
+  }
+
+  return buildEventAttendance(events as EventRow[]);
+}
+
+async function buildEventAttendance(typedEvents: EventRow[]): Promise<TeacherEventAttendance[]> {
   const eventIds = typedEvents.map((event) => event.id);
   if (eventIds.length === 0) {
     return [];
   }
 
-  const { data: attendance, error: attendanceError } = await supabase
-    .from('attendance')
-    .select('student_id, scanned_at, event_id')
-    .in('event_id', eventIds)
-    .order('scanned_at', { ascending: false });
+  const { data: attendance, error: attendanceError } = await supabase.rpc(
+    'get_event_attendance_details',
+    { p_event_ids: eventIds }
+  );
 
   if (attendanceError || !attendance) {
-    return typedEvents.map((event) => ({
-      eventId: event.id,
-      eventCode: event.event_code,
-      title: event.title,
-      startTime: event.start_time,
-      endTime: event.end_time,
-      attendeeCount: 0,
-      attendees: [],
-    }));
+    throw new Error(attendanceError?.message ?? 'Could not load event attendees.');
   }
 
-  const typedAttendance = attendance as AttendanceRow[];
+  const typedAttendance = attendance as EventAttendeeRow[];
   return typedEvents.map((event) => {
     const rows = typedAttendance.filter((row) => row.event_id === event.id);
     return {
@@ -221,6 +230,7 @@ export async function getTeacherEventAttendance(
       attendeeCount: rows.length,
       attendees: rows.map((row) => ({
         studentId: row.student_id,
+        displayName: row.full_name?.trim() || 'Name not provided',
         scannedAt: row.scanned_at,
       })),
     };

@@ -74,3 +74,17 @@ export async function getEventByCode(
 
   return data as CloudEvent;
 }
+
+export async function deleteEvent(eventId: string): Promise<{ error: string | null }> {
+  const { error } = await supabase.from('events').delete().eq('id', eventId);
+  return { error: error?.message ?? null };
+}
+
+export async function clearEventHistory(): Promise<{ error: string | null }> {
+  const { error } = await supabase
+    .from('events')
+    .delete()
+    .not('id', 'is', null);
+
+  return { error: error?.message ?? null };
+}

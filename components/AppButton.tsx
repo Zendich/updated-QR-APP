@@ -9,21 +9,24 @@ type Props = {
   theme?: 'primary' | 'secondary';
   onPress: () => void;
   disabled?: boolean;
+  accessibilityLabel?: string;
 };
 
-export default function AppButton({ title, icon, theme = 'secondary', onPress, disabled = false }: Props) {
-  const pressed = theme === 'primary' ? COLORS.primary : COLORS.card;
+export default function AppButton({ title, icon, theme = 'secondary', onPress, disabled = false, accessibilityLabel }: Props) {
+  const background = theme === 'primary' ? COLORS.primary : COLORS.card;
   const labelColor = theme === 'primary' ? COLORS.textOnPrimary : COLORS.textPrimary;
 
   return (
     <View style={styles.buttonOuter}>
       <Pressable
+        accessibilityLabel={accessibilityLabel ?? title}
         accessibilityRole="button"
         disabled={disabled}
+        hitSlop={8}
         onPress={onPress}
         style={({ pressed: isPressed }) => [
           styles.buttonInner,
-          { backgroundColor: isPressed ? (theme === 'primary' ? COLORS.primaryDark : COLORS.surface) : pressed },
+          { backgroundColor: isPressed ? (theme === 'primary' ? COLORS.primaryDark : COLORS.surface) : background },
           theme === 'primary' && styles.primaryButton,
           theme === 'secondary' && styles.secondaryButton,
           disabled && styles.disabled,
@@ -52,16 +55,16 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: { width: 0, height: 7 },
     shadowOpacity: 0.2,
-    shadowRadius: 12,
+    shadowRadius: 14,
   },
   secondaryButton: {
-    borderColor: COLORS.border,
+    borderColor: COLORS.borderStrong,
     borderWidth: 1,
   },
   disabled: {
-    opacity: 0.55,
+    opacity: 0.52,
   },
   icon: {
     marginRight: 9,
